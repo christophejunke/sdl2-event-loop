@@ -4,10 +4,10 @@ SDL2-EVENT-LOOP
 # Overview
 
 The extensions provides a different event loop than
-SDL2:WITH-EVENT-LOOP, with the following goals in mind:
+`SDL2:WITH-EVENT-LOOP`, with the following goals in mind:
 
 - Be it easy to either (i) handle all events in the same
-  function, like SDL2:WITH-EVENT-LOOP, or (ii) delegate
+  function, like `SDL2:WITH-EVENT-LOOP`, or (ii) delegate
   event handling to other functions.
 
 - Help Common Lisp environments display context-sensititve
@@ -19,12 +19,13 @@ SDL2:WITH-EVENT-LOOP, with the following goals in mind:
   other events.
 
 This is achieved, basically, by separating the existing
-SDL2:WITH-EVENT-LOOP macro as different macros, DO-EVENTS
-which iterates over events, and EVENT-TYPE-CASE which
-dispatches according to an event type. Furthermore, each
-event-type is associated with a destructuring macro, making
-it easier than SDL2:WITH-EVENT-LOOP to know which arguments
-are expected for each kind of event.
+`SDL2:WITH-EVENT-LOOP` macro as different macros,
+`DO-EVENTS` which iterates over events, and
+`EVENT-TYPE-CASE` which dispatches according to an event
+type. Furthermore, each event-type is associated with a
+destructuring macro, making it easier than
+`SDL2:WITH-EVENT-LOOP` to know which arguments are expected
+for each kind of event.
 
 For example, the following systems uses the library in two
 different ways. First, load the test system:
