@@ -92,8 +92,7 @@ Events are logged to *STANDARD-OUTPUT*.")
   (initialize-instance game :window (create-window)))
 
 (defmethod handle-event ((game sample-game) (_ (eql :game-stopped)) e)
-  (slot-makunbound game 'main-window)
-  (reinitialize-instance game))
+  (slot-makunbound game 'main-window))
 
 ;; for debugging
 (progn
