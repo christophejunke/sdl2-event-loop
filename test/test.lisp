@@ -98,10 +98,7 @@ Events are logged to *STANDARD-OUTPUT*.")
 (progn
   (defvar *game* nil)
   (defmethod handle-event :before (game (_ (eql :game-started)) e)
-    (assert (not *game*))
-    (setf *game* game))
-  (defmethod handle-event :after (game (_ (eql :game-stopped)) e)
-    (setf *game* nil)))
+    (setf *game* game)))
 
 (defun dispatch ()
   "Example of a CLOS dispatch event handler"
