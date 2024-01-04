@@ -47,10 +47,7 @@ DO-EVENTS adds an implicit NIL block."
   (check-type method (member :poll :wait))
   (alexandria:with-gensyms (rc binder event-id)
     (alexandria:once-only (method timeout)
-      `(with-captured-bindings (,binder
-                                ,@(if (eq rebind t)
-                                      '(*standard-output*)
-                                      (alexandria:ensure-list rebind)))
+      `(with-captured-bindings (,binder . ,rebind)
          (in-main-thread (:background ,background)
            (with-sdl-event (,event)
              (,binder
