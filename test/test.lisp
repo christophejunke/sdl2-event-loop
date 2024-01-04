@@ -42,14 +42,7 @@ Events are logged to *STANDARD-OUTPUT*.")
   (:documentation "Game event handler for EVENT of type EVENT-TYPE")
   ;; HANDLE-EVENT handle both SDL2 events and game specific events  
   (:method (game type _)
-    "The default method logs all but some events"
-    ;; too much output otherwise
-    (unless (member type (load-time-value
-                          (list gev:raw-window-event
-                                gev:mouse-motion
-                                gev:idle)))
-      (format t "~&Event ~@{~a~^ ~}~%" game type)
-      (finish-output))))
+    "The default method does nothing"))
 
 ;; Client code would call this to exit the loop
 (defun quit-event-loop ()
@@ -59,28 +52,28 @@ Events are logged to *STANDARD-OUTPUT*.")
 (defun serve-events (game)
   "Repeatedly serve events until an event handler calls QUIT-EVENT-LOOP"
   (catch :quit
-    (handle-event game :game-started t)
-    (unwind-protect (do-events (event :event-type type :method :wait :timeout nil)
-                      (restart-case (handle-event game type event)
-                        (ignore () :report "Ignore event")))
-      (handle-event game :game-stopped t))))
+    (loop
+      (catch :restart
+        (handle-event game :game-started t)
+        (unwind-protect (do-events (event :event-type type :method :wait :timeout nil)
+                          (restart-case (handle-event game type event)
+                            (ignore () :report "Ignore event")
+                            (stop-start () :report "Stop game and restart it"
+                              (throw :restart nil))))
+          (handle-event game :game-stopped t))))))
 
 (defmethod handle-event (g (_ (eql gev:quit)) e)
   "Quit loop on :QUIT events"
   (quit-event-loop))
 
 (defun run (game)
-  (loop
-    (format t "~&~a~%~%" *message*)
-    (restart-case (with-captured-bindings (rebind-progn *standard-output*
-                                                        *error-output*)
-                    (with-init (:everything)
-                      ;; in another thread
-                      (rebind-progn (serve-events game)))
-                    ;; exit loop in normal case
-                    (return-from run))
-      (retry () 
-        :report "Restart game"))))
+  (format t "~&~a~%~%" *message*)
+  (with-captured-bindings (rebind-progn *standard-output*
+                                        *error-output*)
+    (with-init (:everything)
+      ;; in another thread
+      (rebind-progn
+       (serve-events game)))))
 
 (defclass sample-game ()
   ((main-window :initarg :window :reader main-window)))
@@ -90,7 +83,9 @@ Events are logged to *STANDARD-OUTPUT*.")
   (initialize-instance game :window (create-window)))
 
 (defmethod handle-event ((game sample-game) (_ (eql :game-stopped)) e)
-  (slot-makunbound game 'main-window))
+  (when (slot-boundp game 'main-window)
+    (destroy-window (main-window game))
+    (slot-makunbound game 'main-window)))
 
 ;; for debugging
 (progn
@@ -110,9 +105,15 @@ Events are logged to *STANDARD-OUTPUT*.")
   (with-window-event-moved (event :x x :y y)
     (format t "~&Window moved for game ~s: ~d, ~d~%" game x y)))
 
+(defmethod handle-event (game (type (eql wev:close)) event)
+  (with-window-event-close (event :window-id w)
+    (format t "~&Window closed ~a" w)))
+
 (defmethod handle-event ((game sample-game) (type (eql gev:key-down)) event)
   (with-key-down-event (event :keysym keysym)
     (if-let (command (case (scancode keysym)
+                       (:scancode-up :go-up)
+                       (:scancode-down :go-down)
                        (:scancode-left :go-left)
                        (:scancode-right :go-right)))
       ;; here :command is not an SDL2 event type, it is part of the
