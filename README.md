@@ -3,12 +3,12 @@ SDL2-EVENT-LOOP
 
 # Overview
 
-The extensions provides a different event loop than
+This system provides an alternative event loop in place of
 `SDL2:WITH-EVENT-LOOP`, with the following goals in mind:
 
-- Be it easy to either (i) handle all events in the same
-  function, like `SDL2:WITH-EVENT-LOOP`, or (ii) delegate
-  event handling to other functions.
+- Be it easy to either handle all events in the same
+  function, like `SDL2:WITH-EVENT-LOOP`, or delegate event
+  handling to other functions.
 
 - Help Common Lisp environments display context-sensititve
   information about each kind of event, notably which
@@ -27,7 +27,7 @@ destructuring macro, making it easier than
 `SDL2:WITH-EVENT-LOOP` to know which arguments are expected
 for each kind of event.
 
-For example, the following systems uses the library in two
+For example, the following system uses the library in two
 different ways. First, load the test system:
 
     (QL:QUICKLOAD "SDL2-EVENT-LOOP/TEST")
