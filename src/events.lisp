@@ -19,8 +19,7 @@
     ((event &key
               (event-type (gensym))
               (method :poll)
-              timeout
-              rebind)
+              timeout)
      &body body)
   "Indefintely loop over SDL events in the main SDL2 thread.
 
@@ -35,34 +34,26 @@ type can also be :IDLE in case (i) no event is actually being processed
 and (ii) the loop is not waiting for events. That case can happen when METHOD
 is :POLL or when METHOD is :WAIT and a :TIMEOUT occurs.
 
-BODY is executed in the main SDL2 thread; consequently, the dynamic bindings in
-effect inside BODY are different from the one outside of DO-EVENTS. The :REBIND
-option accepts a designator for a list of symbols, whose bindings are captured
-in the current thread and re-established inside BODY. This is done using the
-auxiliary macro WITH-CAPTURED-BINDINGS.
-
 DO-EVENTS adds an implicit NIL block."
   (check-type method (member :poll :wait))
-  (alexandria:with-gensyms (rc binder event-id)
+  (alexandria:with-gensyms (rc event-id)
     (alexandria:once-only (method timeout)
-      `(with-captured-bindings (,binder . ,rebind)
-         (with-sdl-event (,event)
-           (,binder
-            (loop
-              (let* ((,rc (next-event ,event ,method ,timeout))
-                     (,event-type
-                       (if (zerop ,rc)
-                           :idle
-                           (get-event-type ,event)))
-                     (,event-id (and (sdl2::user-event-type-p ,event-type)
-                                     (,event :user :code))))
-                (declare (type (signed-byte 32) ,rc))
-                (case ,event-type
-                  (:lisp-message (sdl2::get-and-handle-messages))
-                  (t
-                   (unwind-protect (progn ,@body)
-                     (when ,event-id
-                       (sdl2::free-user-data ,event-id)))))))))))))
+      `(with-sdl-event (,event)
+         (loop
+           (let* ((,rc (next-event ,event ,method ,timeout))
+                  (,event-type
+                    (if (zerop ,rc)
+                        :idle
+                        (get-event-type ,event)))
+                  (,event-id (and (sdl2::user-event-type-p ,event-type)
+                                  (,event :user :code))))
+             (declare (type (signed-byte 32) ,rc))
+             (case ,event-type
+               (:lisp-message (sdl2::get-and-handle-messages))
+               (t
+                (unwind-protect (progn ,@body)
+                  (when ,event-id
+                    (sdl2::free-user-data ,event-id)))))))))))
 
 (defun accessor-keywords (event-type)
   "Map EVENT-TYPE to an ACCESSOR keyword and all event-specific parameters.
@@ -136,8 +127,7 @@ padding fields and the type tag"
 
 (defmacro do-match-events ((&key
                               (method :poll)
-                              timeout
-                              rebind)
+                              timeout)
                            &body clauses)
   "Combine DO-EVENTS with EVENT-TYPE-CASE.
 
@@ -154,8 +144,7 @@ padding fields and the type tag"
   (alexandria:with-gensyms (event event-type)
     `(do-events (,event :event-type ,event-type
                         :method ,method
-                        :timeout ,timeout
-                        :rebind ,rebind)
+                        :timeout ,timeout)
        (event-type-case (,event ,event-type)
          ,@clauses))))
 

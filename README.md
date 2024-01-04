@@ -54,20 +54,8 @@ anonymous).
 
     (do-events (<event> [:event-type ( symbol )]
                         [:method ( :poll* | :wait )]
-                        [:timeout ( nil* | milliseconds )]
-                        [:rebind ( list-of-special-variables )])
+                        [:timeout ( nil* | milliseconds )])
       <body>)
-
-`BODY` is executed in the main SDL2 thread; consequently,
-the dynamic bindings in effect inside BODY are different
-from the one outside of `DO-EVENTS`. For that reason, the
-`:REBIND` option accepts a designator for an unevaluated
-list of symbols, whose bindings are captured in the current
-thread and re-established inside body. This is done using
-the auxiliary macro `WITH-CAPTURED-BINDINGS`. If `:REBIND`
-is `T` or `:ALL`, then all 44 CL standard special variables
-surrounded by earmuffs (ie. not REPL history variables) are
-rebound locally in the thread.
 
 Other options, `:METHOD` and `:TIMEOUT`, have the same
 meaning as in `SDL2:WITH-EVENT-LOOP`:
@@ -109,6 +97,41 @@ Finally, it can be equal to any symbol registered through
 `SDL2:REGISTER-USER-EVENT-TYPE`. If so, a call to
 `SDL2::FREE-USER-DATA` is done after each iteration or when
 unwinding from the loop.
+
+# WITH-CAPTURED-BINDINGS
+
+The main SDL2 API relies on a dedicated thread.  `SDL2:WITH-INIT` and
+`SDL2:WITH-EVERYTHING` transfer their body into another thread;
+consequently, the dynamic bindings in effect inside these macros are
+possibly different from the one outside of them. For that reason, the
+current library expose `WITH-CAPTURED-BINDINGS`: it lexically binds
+the current values of variables outside a context change (e.g. a
+thread, a cloture), and defines a `macrolet` that can be expanded in
+another context to rebind the saved bindings. In other words, with the
+following code, `my-progn` is going to be bound to a `macrolet`,
+expanded inside the anonymous function as `let` bindings:
+
+    (with-captured-bindings (my-progn *standard-output* *error-output*)
+      (make-thread (lambda () (my-progn (print "hello")))))
+
+After cleaning it a bit for clarity, the above expands as follows:
+
+    (LET ((G382 *STANDARD-OUTPUT*) (G383 *ERROR-OUTPUT*))
+      (MAKE-THREAD
+       (LAMBDA ()
+         (LET ((*STANDARD-OUTPUT* G382) (*ERROR-OUTPUT* G383))
+           (PRINT "hello")))))
+
+The macro accepts a list of symbols, but currently if that list is
+instead a symbol `T` or `:ALL`, then all 44 CL standard special
+variables surrounded by earmuffs (ie. not REPL history variables) are
+rebound locally in the thread. More precisely, this is expressed as
+follows:
+
+    (with-captured-bindings (rebind . :all)
+      ...)
+
+This syntax is not very satisfactory and is probably going to change.
 
 # Destructuring events
 

@@ -1,6 +1,7 @@
 (defsystem "sdl2-event-loop"
   :depends-on ("alexandria" "cl-autowrap" "sdl2")
   :pathname "src"
+  :serial t
   :components ((:file "package")
                (:file "macros")
                (:file "ffi")

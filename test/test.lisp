@@ -2,8 +2,6 @@
   (:use :cl :sdl2 :sdl2-event-loop :sdl2-event-loop.events :alexandria)
   (:local-nicknames (GEV sdl2-event-loop.events.general)
                     (WEV sdl2-event-loop.events.window))
-  (:import-from #:sdl2-event-loop.impl
-                sdl2-event-loop.impl:with-captured-bindings)
   (:export #:single-loop
            #:dispatch))
 
@@ -19,20 +17,22 @@ Events are logged to *STANDARD-OUTPUT*.")
 
 (defun single-loop ()
   (format t "~&~a~%" *message*)
-  (with-everything (:window (w :w 600 :h 600) :gl gl)
-    (flet ((info (&rest rest) (print rest) (values)))
-      (declare (inline info))
-      (do-match-events (:method :wait :timeout 600 :rebind t)
-        (:quit (return))
-        (:idle (info :idle))
-        (with-window-event-moved (_ :x x :y y)
-          (info :window :x x :y y))
-        (with-window-event-focus-gained (_)
-          (info :focused))
-        (with-mouse-motion-event (_ :xrel dx :yrel dy)
-          (info :mouse :dx dx :dy dy))
-        (with-finger-motion-event (_ :dx dx :dy dy)
-          (info :finger :dx dx :dy dy))))))
+  (with-captured-bindings (@progn . :all)
+    (with-everything (:window (w :w 600 :h 600) :gl gl)
+      (@progn
+        (flet ((info (&rest rest) (print rest) (values)))
+          (declare (inline info))
+          (do-match-events (:method :wait :timeout 600)
+            (:quit (return))
+            (:idle (info :idle))
+            (with-window-event-moved (_ :x x :y y)
+              (info :window :x x :y y))
+            (with-window-event-focus-gained (_)
+              (info :focused))
+            (with-mouse-motion-event (_ :xrel dx :yrel dy)
+              (info :mouse :dx dx :dy dy))
+            (with-finger-motion-event (_ :dx dx :dy dy)
+              (info :finger :dx dx :dy dy))))))))
 
 ;;;;
 ;;;; Example of CLOS-based event-handler
@@ -68,11 +68,11 @@ Events are logged to *STANDARD-OUTPUT*.")
 
 (defun run (game)
   (format t "~&~a~%~%" *message*)
-  (with-captured-bindings (rebind-progn *standard-output*
-                                        *error-output*)
+  (with-captured-bindings (@progn *standard-output*
+                                  *error-output*)
     (with-init (:everything)
       ;; in another thread
-      (rebind-progn
+      (@progn
        (serve-events game)))))
 
 (defclass sample-game ()

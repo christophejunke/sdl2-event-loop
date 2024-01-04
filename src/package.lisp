@@ -4,7 +4,8 @@
   (:export #:do-match-events
            #:do-events
            #:event-type-case
-           #:windowevent))
+           #:windowevent
+           #:with-captured-bindings))
 
 (defpackage #:sdl2-event-loop.events.general
   (:use)
@@ -122,4 +123,4 @@
 (defpackage :sdl2-event-loop.impl
   (:use :cl :sdl2 :autowrap :sdl2-event-loop :sdl2-event-loop.events)
   (:documentation "Implementation package for SDL2-EVENT-LOOP")
-  (:export #:with-captured-bindings))
+  (:export))
