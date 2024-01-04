@@ -75,7 +75,7 @@ must be run in a thread/context where SDL2 is initialized.
 When METHOD is `:WAIT` with a non-NIL `:TIMEOUT`, or when
 METHOD is `:POLL`, then `EVENT-TYPE` might be `:IDLE`.
 
-`EVENT-TYPE` might be one of the following keywords:
+`EVENT-TYPE` might also be one of the following keywords:
 
     :CONTROLLERAXISMOTION :CONTROLLERBUTTONDOWN
     :CONTROLLERBUTTONUP :CONTROLLERDEVICEADDED
@@ -100,14 +100,15 @@ unwinding from the loop.
 
 # WITH-CAPTURED-BINDINGS
 
-The main SDL2 API relies on a dedicated thread.  `SDL2:WITH-INIT` and
+The main SDL2 API uses a dedicated thread. `SDL2:WITH-INIT` and
 `SDL2:WITH-EVERYTHING` transfer their body into another thread;
 consequently, the dynamic bindings in effect inside these macros are
 possibly different from the one outside of them. For that reason, the
 current library expose `WITH-CAPTURED-BINDINGS`: it lexically binds
-the current values of variables outside a context change (e.g. a
-thread, a cloture), and defines a `macrolet` that can be expanded in
-another context to rebind the saved bindings. In other words, with the
+the current values of variables outside a dynamic context change
+(e.g. a closure intended to be run in a different dynamic scope, like
+a thread), and defines a `macrolet` that can be expanded in another
+context to rebind the saved bindings. In other words, with the
 following code, `my-progn` is going to be bound to a `macrolet`,
 expanded inside the anonymous function as `let` bindings:
 
