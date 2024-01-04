@@ -1,22 +1,14 @@
 (defpackage :sdl2-event-loop
+  (:documentation "Main package for SDL2 event loop macros")
   (:use)
-  (:export
-
-   ;; Event loop macros
-   
-   #:do-match-events
-   #:do-events
-   #:event-type-case
-
-   ;; In case access to raw window event is preferable
-
-   #:with-raw-window-event   
-   #:windowevent
-))
+  (:export #:do-match-events
+           #:do-events
+           #:event-type-case
+           #:windowevent))
 
 (defpackage #:sdl2-event-loop.events.general
   (:use)
-  (:documentation "")
+  (:documentation "Symbols for general event types")
   (:export #:controller-axis-motion
            #:controller-button-down
            #:controller-button-up
@@ -52,7 +44,7 @@
 
 (defpackage #:sdl2-event-loop.events.window
   (:use)
-  (:documentation "")
+  (:documentation "Symbols for window event types")
   (:export #:close
            #:display-changed
            #:enter
@@ -74,8 +66,7 @@
            #:take-focus))
 
 (defpackage :sdl2-event-loop.events
-  (:documentation
-   "Destructuring macros which act as patterns in EVENT-TYPE-CASE")
+  (:documentation "All event destructuring macros")
   (:export #:with-controller-axis-motion-event
            #:with-controller-button-down-event
            #:with-controller-button-up-event
@@ -106,6 +97,7 @@
            #:with-text-editing-event
            #:with-text-input-event
            #:with-user-event
+           #:with-raw-window-event   
            #:with-window-event-close
            #:with-window-event-display-changed
            #:with-window-event-enter
@@ -129,4 +121,5 @@
 
 (defpackage :sdl2-event-loop.impl
   (:use :cl :sdl2 :autowrap :sdl2-event-loop :sdl2-event-loop.events)
+  (:documentation "Implementation package for SDL2-EVENT-LOOP")
   (:export #:with-captured-bindings))
