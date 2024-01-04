@@ -64,7 +64,7 @@ from the one outside of `DO-EVENTS`. The `:REBIND` option
 accepts a designator for an unevaluated list of symbols,
 whose bindings are captured in the current thread and
 re-established inside body. This is done using the auxiliary
-macro `WITH-CAPTURED-BINDINGS`. If `:REBIND` is T or :ALL,
+macro `WITH-CAPTURED-BINDINGS`. If `:REBIND` is T or `:ALL`,
 then all 44 CL standard special variables surrounded by
 earmuffs (ie. not REPL history variables) are rebound
 locally in the thread.
