@@ -47,9 +47,10 @@ dynamic invocations are not protected (`RECURSIVE`
 parameter).
 
 The macro is a DO-style loop with an implicit NIL block,
-which repeatedly binds `EVENT` to an SDL event object, and
-optionally bind `EVENT-TYPE` to the event's type (the type
-must be computed even when anonymous).
+which binds `EVENT` to an SDL event object (a single
+allocation that is mutated). It also bind `EVENT-TYPE` to
+the event's type (the type must be computed even when
+anonymous). 
 
     (do-events (<event> [:event-type ( symbol )]
                         [:method ( :poll* | :wait )]
@@ -60,14 +61,14 @@ must be computed even when anonymous).
 
 `BODY` is executed in the main SDL2 thread; consequently,
 the dynamic bindings in effect inside BODY are different
-from the one outside of `DO-EVENTS`. The `:REBIND` option
-accepts a designator for an unevaluated list of symbols,
-whose bindings are captured in the current thread and
-re-established inside body. This is done using the auxiliary
-macro `WITH-CAPTURED-BINDINGS`. If `:REBIND` is T or `:ALL`,
-then all 44 CL standard special variables surrounded by
-earmuffs (ie. not REPL history variables) are rebound
-locally in the thread.
+from the one outside of `DO-EVENTS`. For that reason, the
+`:REBIND` option accepts a designator for an unevaluated
+list of symbols, whose bindings are captured in the current
+thread and re-established inside body. This is done using
+the auxiliary macro `WITH-CAPTURED-BINDINGS`. If `:REBIND`
+is `T` or `:ALL`, then all 44 CL standard special variables
+surrounded by earmuffs (ie. not REPL history variables) are
+rebound locally in the thread.
 
 Other options, `:METHOD`, `:TIMEOUT` and `:BACKGROUND` have
 the same meaning as in `SDL2:WITH-EVENT-LOOP`:
@@ -101,7 +102,7 @@ METHOD is `:POLL`, then `EVENT-TYPE` might be `:IDLE`.
     :QUIT :SYSWMEVENT :TEXTEDITING :TEXTINPUT :USEREVENT
     :WINDOWEVENT
 
-Aliases to these keywords may be found in the two following packages
+Aliases to these keywords may be found in the two following packages:
 
    - `SDL2-EVENT-LOOP.EVENTS.GENERAL` for all base events
    - `SDL2-EVENT-LOOP.EVENTS.WINDOW` for window events
@@ -149,13 +150,13 @@ Here below is one level of macroexapnsion:
 Unlike with `SDL2:WITH-EVENT-LOOP`, each event is associated
 with a different macro, and thus a different signature.
 That makes it easier to known which keyword arguments are
-relevant for each event.
+relevant for each event type.
 
 # Window events
 
 The `:WINDOWEVENT` type is associated with a macro named
 `WITH-RAW-WINDOW-EVENT`. It is a generic window event that
-is covers a range of subtypes of window events, held in its
+covers a range of subtypes of window events, held in its
 `:EVENT` slot. It also has two general-purpose slots named
 `:DATA1` and `:DATA2`.
 
@@ -183,11 +184,12 @@ one, determines its type (a keyword). The `EVENT-TYPE-CASE`
 macro provides a way to dispatch on event types using either
 two kinds of clauses:
 
-- a single keyword which identifies an event-type, T, or OTHERWISE
+- a single keyword which identifies an event-type
 - a form with the same syntax as the destructuring WITH- macros seen
   previously. That allows to reuse the same syntax for both dispatch
   and destructuring, and benefits from auto-completion facilities that
   are available for WITH- macros in the scope of a case.
+- `T`, or `OTHERWISE`, for all other events.
 
 For example, consider the following expression:
 
@@ -224,17 +226,17 @@ The above is macroexpanded as:
 
 Notice that:
 
-- Each WITH- form implicitly knows which event-type keyword to match
+- Each `WITH-` form implicitly knows which event-type keyword to match
   against.
 
 - Window events are grouped as a single clause, and further dispatched
   according to the `WINDOWEVENT` tag in that clause.
 
-- The `EVENT` parameter of each WITH- form is redundant in
+- The `EVENT` parameter of each `WITH-` form is redundant in
   the context of `EVENT-TYPE-CASE`; it can thus be omitted
-  (either NIL or a symbol which is STRING= to "_"). If,
-  however, you put a symbol here, it is locally bound to the
-  current event (see `DO-MATCH-EVENTS`):
+  (either `NIL` or a symbol which is `STRING=` to
+  `"_"`). If, however, you put a symbol here, it is locally
+  bound to the current event (see `DO-MATCH-EVENTS`):
 
         (event-type-case (event event-type)
           (with-key-down-event (e)
