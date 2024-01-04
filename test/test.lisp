@@ -54,13 +54,13 @@ Events are logged to *STANDARD-OUTPUT*.")
   (catch :quit
     (loop
       (catch :restart
-        (handle-event game :game-started t)
+        (handle-event game :game :started)
         (unwind-protect (do-events (event :event-type type :method :wait :timeout nil)
                           (restart-case (handle-event game type event)
                             (ignore () :report "Ignore event")
                             (stop-start () :report "Stop game and restart it"
                               (throw :restart nil))))
-          (handle-event game :game-stopped t))))))
+          (handle-event game :game :stopped))))))
 
 (defmethod handle-event (g (_ (eql gev:quit)) e)
   "Quit loop on :QUIT events"
@@ -78,11 +78,11 @@ Events are logged to *STANDARD-OUTPUT*.")
 (defclass sample-game ()
   ((main-window :initarg :window :reader main-window)))
 
-(defmethod handle-event ((game sample-game) (_ (eql :game-started)) e)
+(defmethod handle-event ((game sample-game) (_ (eql :game)) (e  (eql :started)))
   (assert (not (slot-boundp game 'main-window)) () "No main window should exist here")
   (initialize-instance game :window (create-window)))
 
-(defmethod handle-event ((game sample-game) (_ (eql :game-stopped)) e)
+(defmethod handle-event ((game sample-game) (_ (eql :game)) (e (eql :stopped)))
   (when (slot-boundp game 'main-window)
     (destroy-window (main-window game))
     (slot-makunbound game 'main-window)))
@@ -90,7 +90,7 @@ Events are logged to *STANDARD-OUTPUT*.")
 ;; for debugging
 (progn
   (defvar *game* nil)
-  (defmethod handle-event :before (game (_ (eql :game-started)) e)
+  (defmethod handle-event :before (game (_ (eql :game)) (e (eql :started)))
     (setf *game* game)))
 
 (defun dispatch ()
@@ -107,11 +107,12 @@ Events are logged to *STANDARD-OUTPUT*.")
 
 (defmethod handle-event (game (type (eql wev:close)) event)
   (with-window-event-close (event :window-id w)
-    (format t "~&Window closed ~a" w)))
+    (format t "~&Window closed ~a~%" w)))
 
 (defmethod handle-event ((game sample-game) (type (eql gev:key-down)) event)
   (with-key-down-event (event :keysym keysym)
     (if-let (command (case (scancode keysym)
+                       (:scancode-escape (break "Entering debugger"))
                        (:scancode-up :go-up)
                        (:scancode-down :go-down)
                        (:scancode-left :go-left)
