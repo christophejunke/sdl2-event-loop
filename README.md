@@ -55,7 +55,6 @@ anonymous).
     (do-events (<event> [:event-type ( symbol )]
                         [:method ( :poll* | :wait )]
                         [:timeout ( nil* | milliseconds )]
-                        [:background ( nil* | t )]
                         [:rebind ( list-of-special-variables )])
       <body>)
 
@@ -70,12 +69,8 @@ is `T` or `:ALL`, then all 44 CL standard special variables
 surrounded by earmuffs (ie. not REPL history variables) are
 rebound locally in the thread.
 
-Other options, `:METHOD`, `:TIMEOUT` and `:BACKGROUND` have
-the same meaning as in `SDL2:WITH-EVENT-LOOP`:
-
-  - The `:BACKGROUND` flag, when non-NIL, indicates that
-    current thread does not wait for the event-loop to
-    terminate.
+Other options, `:METHOD` and `:TIMEOUT`, have the same
+meaning as in `SDL2:WITH-EVENT-LOOP`:
 
   - `:METHOD` is either `:WAIT` (blocking) or `:POLL`
     (non-blocking, the default).
@@ -85,6 +80,9 @@ the same meaning as in `SDL2:WITH-EVENT-LOOP`:
     is only meaningful when used in conjunction with the
     `:WAIT` method (the blocking wait operation terminates
     after TIMEOUT milliseconds).
+
+Note that there is no `:BACKGROUND` flag, the event loop
+must be run in a thread/context where SDL2 is initialized.
 
 When METHOD is `:WAIT` with a non-NIL `:TIMEOUT`, or when
 METHOD is `:POLL`, then `EVENT-TYPE` might be `:IDLE`.
